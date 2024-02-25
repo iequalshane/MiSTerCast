@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
+using System.Globalization;
 
 namespace MiSTerCast
 {
@@ -349,7 +350,7 @@ namespace MiSTerCast
         {
             double result;
             e.Handled =
-                !(double.TryParse(((TextBox)sender).Text + e.Text, out result) &&
+                !(double.TryParse((((TextBox)sender).Text + e.Text).Replace(',','.'), NumberStyles.Any, CultureInfo.InvariantCulture, out result) &&
                 result >= 0);
         }
 
@@ -492,7 +493,7 @@ namespace MiSTerCast
 
         private void OnModelineChanged()
         {
-            double.TryParse(pclockTextBox.Text, out currentModeLine.pclock);
+            double.TryParse(pclockTextBox.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out currentModeLine.pclock);
             ushort.TryParse(hactiveTextBox.Text, out currentModeLine.hactive);
             ushort.TryParse(hbeginTextBox.Text, out currentModeLine.hbegin);
             ushort.TryParse(hendTextBox.Text, out currentModeLine.hend);
@@ -602,7 +603,7 @@ namespace MiSTerCast
                                 else
                                 {
                                     UInt16 interlace;
-                                    if (!Double.TryParse(values[0], out modeline.pclock) ||
+                                    if (!Double.TryParse(values[0].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture,out modeline.pclock) ||
                                         !UInt16.TryParse(values[1], out modeline.hactive) ||
                                         !UInt16.TryParse(values[2], out modeline.hbegin) ||
                                         !UInt16.TryParse(values[3], out modeline.hend) ||
