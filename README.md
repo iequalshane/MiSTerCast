@@ -7,6 +7,8 @@ Make sure you already have Groovy_Mame working well with Groovy_MiSTer before us
 https://github.com/lutechsource/MiSTerStuff/blob/main/GroovyMiSTer/mame_documentation.md
 https://github.com/psakhis/Groovy_MiSTer
 
+The Microsoft VC++ x86 Redistributable is required. You can install it from here: https://aka.ms/vs/17/release/vc_redist.x86.exe
+
 For audio, you will need to enable audio on the Groovy_MiSTer core.
 
 ## Known issues
