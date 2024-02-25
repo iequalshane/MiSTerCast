@@ -1,0 +1,145 @@
+#pragma once
+
+// REFERENCE_TIME time units per second and per millisecond
+#define REFTIMES_PER_SEC  10000000
+#define REFTIMES_PER_MILLISEC  10000
+
+// Buffers
+#define AUDIO_BUFFER_SIZE 10000000
+std::atomic_uint AudioWritePos = 0;
+std::atomic_uint AudioReadPos = 0;
+std::atomic_int audioSampleRate;
+uint16_t audioBuffer[AUDIO_BUFFER_SIZE] = {};
+uint16_t audioSendBuffer[AUDIO_BUFFER_SIZE] = {};
+
+// Audio Capture
+REFERENCE_TIME hnsRequestedDuration = REFTIMES_PER_SEC;
+UINT32 bufferFrameCount;
+UINT32 numFramesAvailable;
+IMMDeviceEnumerator *pEnumerator = NULL;
+IMMDevice *pDevice = NULL;
+IAudioClient *pAudioClient = NULL;
+IAudioCaptureClient *pCaptureClient = NULL;
+WAVEFORMATEX *pwfx = NULL;
+
+bool InitAudioCapture()
+{
+    HRESULT hr;
+
+    hr = CoInitialize(nullptr);
+    EXIT_ON_ERROR(hr, "CoInitialize failed");
+
+    hr = CoCreateInstance(
+        __uuidof(MMDeviceEnumerator), NULL,
+        CLSCTX_ALL, __uuidof(IMMDeviceEnumerator),
+        (void**)&pEnumerator);
+    EXIT_ON_ERROR(hr, "CoCreateInstance of MMDeviceEnumerator failed");
+
+    hr = pEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &pDevice);
+    EXIT_ON_ERROR(hr, "IMMDeviceEnumerator GetDefaultAudioEndpoint failed");
+
+    hr = pDevice->Activate(
+        __uuidof(IAudioClient), CLSCTX_ALL,
+        NULL, (void**)&pAudioClient);
+    EXIT_ON_ERROR(hr, "IMMDevice Activate failed");
+
+    hr = pAudioClient->GetMixFormat(&pwfx);
+    audioSampleRate = pwfx->nSamplesPerSec;
+    EXIT_ON_ERROR(hr, "IAudioClient GetMixFormat failed");
+
+    hr = pAudioClient->Initialize(
+        AUDCLNT_SHAREMODE_SHARED,
+        AUDCLNT_STREAMFLAGS_LOOPBACK,
+        hnsRequestedDuration,
+        0,
+        pwfx,
+        NULL);
+    EXIT_ON_ERROR(hr, "IAudioClient Initialize failed");
+
+    hr = pAudioClient->GetBufferSize(&bufferFrameCount);
+    EXIT_ON_ERROR(hr, "IAudioClient  GetBufferSize failed");
+
+    hr = pAudioClient->GetService(__uuidof(IAudioCaptureClient), (void**)&pCaptureClient);
+    EXIT_ON_ERROR(hr, "IAudioClient GetService failed");
+
+    return true;
+}
+
+void CleanupAudioCatpure()
+{
+    CoTaskMemFree(pwfx);
+    SAFE_RELEASE(pEnumerator)
+    SAFE_RELEASE(pDevice)
+    SAFE_RELEASE(pAudioClient)
+    SAFE_RELEASE(pCaptureClient)
+}
+
+bool StartAudioCapture()
+{
+    HRESULT hr = pAudioClient->Start();
+    EXIT_ON_ERROR(hr, "IAudioClient Start failed");
+
+    return true;
+}
+
+bool StopAudioCapture()
+{
+
+    HRESULT hr = pAudioClient->Stop();
+    EXIT_ON_ERROR(hr, "IAudioCaptureClient Stop failed");
+
+     return true;
+}
+
+bool TickAudioCapture()
+{
+    UINT32 packetLength = 0;
+    HRESULT hr = pCaptureClient->GetNextPacketSize(&packetLength);
+    EXIT_ON_ERROR(hr, "IAudioCaptureClient GetNextPacketSize failed");
+
+    while (packetLength != 0)
+    {
+        // Get the available data in the shared buffer.
+        BYTE *pData;
+        DWORD flags;
+        hr = pCaptureClient->GetBuffer(
+            &pData,
+            &numFramesAvailable,
+            &flags, NULL, NULL);
+        EXIT_ON_ERROR(hr, "IAudioCaptureClient GetBuffer failed");
+
+        bool silence = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
+
+        float* pDataFloat = (float*)pData;
+        LONG lFloatsToWrite = numFramesAvailable * pwfx->nBlockAlign / sizeof(float);
+        LONG dataPos = 0;
+        LONG writePos = AudioWritePos;
+        while (dataPos < lFloatsToWrite)
+        {
+            LONG writeLength = std::min(AUDIO_BUFFER_SIZE - writePos, lFloatsToWrite - dataPos);
+            if (silence)
+            {
+                ZeroMemory(&audioBuffer[writePos], writeLength);
+            }
+            else
+            {
+                for (int i = 0; i < writeLength; i++)
+                {
+                    audioBuffer[writePos + i] = (uint16_t)(pDataFloat[dataPos + i] * 32767);
+                }
+            }
+
+            dataPos += writeLength;
+            writePos = (writePos + writeLength) % AUDIO_BUFFER_SIZE;
+        }
+        AudioWritePos = writePos;
+
+        hr = pCaptureClient->ReleaseBuffer(numFramesAvailable);
+        EXIT_ON_ERROR(hr, "IAudioCaptureClient ReleaseBuffer failed");
+
+        hr = pCaptureClient->GetNextPacketSize(&packetLength);
+        EXIT_ON_ERROR(hr, "IAudioCaptureClient GetNextPacketSize failed");
+    }
+
+    return true;
+}

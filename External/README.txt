@@ -1,0 +1,1 @@
+Download https://github.com/lz4/lz4/releases/download/v1.9.4/lz4_win32_v1_9_4.zip and extract to External/lz4

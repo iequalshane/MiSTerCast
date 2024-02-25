@@ -1,0 +1,265 @@
+﻿<Window x:Class="MiSTerCast.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MiSTerCast"
+        mc:Ignorable="d"
+        Title="MiSTerCast 1.00" Height="600" Width="580"
+        Activated="Window_Activated"
+        Closing="MainWindow_Closing"
+        Closed="Window_Closed">
+    <Border Padding="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="180"/>
+                <!--<RowDefinition Height="*"/>-->
+            </Grid.RowDefinitions>
+            <GroupBox Header="Controls" Grid.Row="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="44"/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="ToggleStreamButton" Grid.Column="0" Margin="10 10 10 10" IsEnabled="True" Height="Auto" Click="ToggleStreamButton_Click">Start Stream</Button>
+                    <Button x:Name="SaveSettingsButton" Grid.Column="1" Margin="10 10 10 10" Click="SaveSettingsButton_Click">Save Settings</Button>
+                    <Button x:Name="LoadSettingsButton" Grid.Column="2" Margin="10 10 10 10" Click="LoadSettingsButton_Click">Load Settings</Button>
+                    <Label Grid.Column="3" Margin="10 10 10 10">Target IP</Label>
+                    <TextBox x:Name="TargetIpAddresTextBox" Grid.Column="4" Margin="10 10 10 10" TextAlignment="Left">192.168.1.2</TextBox>
+                    <Button x:Name="HelpButton" Grid.Column="5"  Margin="10 10 10 10" Click="HelpButton_Click">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="10"/>
+                            </Style>
+                        </Button.Resources> 
+                        ?
+                    </Button>
+                </Grid>
+            </GroupBox>
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <GroupBox Header="Modeline Presets" Grid.Column="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <ComboBox x:Name="ModelinePresetsBox" Grid.Row="0" Margin="10 10 10 10" Width="Auto" SelectedIndex="0" SelectionChanged="ModelinePresetsBox_SelectionChanged">
+                            <ComboBoxItem>320x240 NTSC (60Hz)</ComboBoxItem>
+                        </ComboBox>
+                        <Button x:Name="ApplyModelineButton" IsEnabled="False" Grid.Row="1" Margin="10 10 10 10" Click="ApplyModelineButton_Click">Apply Modeline</Button>
+                    </Grid>
+                </GroupBox>
+                <GroupBox Header="Modeline" Grid.Column="1">
+                    <StackPanel>
+                        <Grid Margin="10,1,10,1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="0" Margin="10,0,10,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0">Pclock</Label>
+                                <TextBox Grid.Row="1" x:Name="pclockTextBox" PreviewTextInput="PositiveDoubleValidation" TextChanged="ModeLineTextBox_TextChanged"></TextBox>
+                            </Grid>
+                            <Grid Grid.Column="1" Margin="10,0,10,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0">Hactive</Label>
+                                <TextBox Grid.Row="1" x:Name="hactiveTextBox" PreviewTextInput="PositiveIntValidation" TextChanged="ModeLineTextBox_TextChanged"></TextBox>
+                            </Grid>
+                            <Grid Grid.Column="2" Margin="10,0,10,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0">Hbegin</Label>
+                                <TextBox Grid.Row="1" x:Name="hbeginTextBox" PreviewTextInput="PositiveIntValidation" TextChanged="ModeLineTextBox_TextChanged"></TextBox>
+                            </Grid>
+                            <Grid Grid.Column="3" Margin="10,0,10,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0">Hend</Label>
+                                <TextBox Grid.Row="1" x:Name="hendTextBox" PreviewTextInput="PositiveIntValidation" TextChanged="ModeLineTextBox_TextChanged"></TextBox>
+                            </Grid>
+                            <Grid Grid.Column="4" Margin="10,0,10,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0">Htotal</Label>
+                                <TextBox Grid.Row="1" x:Name="htotalTextBox" PreviewTextInput="PositiveIntValidation" TextChanged="ModeLineTextBox_TextChanged"></TextBox>
+                            </Grid>
+                        </Grid>
+                        <Grid Margin="10,1,10,1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="0" Margin="10,0,10,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0">Vactive</Label>
+                                <TextBox Grid.Row="1" x:Name="vactiveTextBox" PreviewTextInput="PositiveIntValidation" TextChanged="ModeLineTextBox_TextChanged"></TextBox>
+                            </Grid>
+                            <Grid Grid.Column="1" Margin="10,0,10,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0">Vbegin</Label>
+                                <TextBox Grid.Row="1" x:Name="vbeginTextBox" PreviewTextInput="PositiveIntValidation" TextChanged="ModeLineTextBox_TextChanged"></TextBox>
+                            </Grid>
+                            <Grid Grid.Column="2" Margin="10,0,10,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0">Vend</Label>
+                                <TextBox Grid.Row="1" x:Name="vendTextBox" PreviewTextInput="PositiveIntValidation" TextChanged="ModeLineTextBox_TextChanged"></TextBox>
+                            </Grid>
+                            <Grid Grid.Column="3" Margin="10,0,10,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0" >Vtotal</Label>
+                                <TextBox Grid.Row="1" x:Name="vtotalTextBox" PreviewTextInput="PositiveIntValidation" TextChanged="ModeLineTextBox_TextChanged"></TextBox>
+                            </Grid>
+                            <Grid Grid.Column="4" Margin="10,0,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0" >Interlace</Label>
+                                <CheckBox Grid.Row="4" HorizontalAlignment="Center" x:Name="interlacedCheckBox" Checked="InterlacedCheckBox_Checked" Unchecked="InterlacedCheckBox_Checked"></CheckBox>
+                            </Grid>
+                        </Grid>
+                    </StackPanel>
+                </GroupBox>
+            </Grid>
+            <GroupBox Header="Capture Source" Grid.Row="3">
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0" >
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <ComboBox x:Name="CaptureSourceBox" Grid.Row="0" Margin="10 10 10 0" Width="Auto" SelectedIndex="0" SelectionChanged="CaptureSource_SelectionChanged">
+                            <ComboBoxItem>Display 1</ComboBoxItem>
+                            <ComboBoxItem>Display 2</ComboBoxItem>
+                            <ComboBoxItem>Display 3</ComboBoxItem>
+                            <ComboBoxItem>Display 4</ComboBoxItem>
+                        </ComboBox>
+                        <ComboBox x:Name="AlignmentBox" Grid.Row="1" Margin="10 10 10 0" Width="Auto" SelectedIndex="0" SelectionChanged="CaptureSource_SelectionChanged">
+                            <ComboBoxItem>Centered</ComboBoxItem>
+                            <ComboBoxItem>TopLeft</ComboBoxItem>
+                            <ComboBoxItem>Top</ComboBoxItem>
+                            <ComboBoxItem>TopRight</ComboBoxItem>
+                            <ComboBoxItem>Right</ComboBoxItem>
+                            <ComboBoxItem>BottomRight</ComboBoxItem>
+                            <ComboBoxItem>Bottom</ComboBoxItem>
+                            <ComboBoxItem>BottomLeft</ComboBoxItem>
+                            <ComboBoxItem>Left</ComboBoxItem>
+                        </ComboBox>
+                        <ComboBox x:Name="RotateComboBox" Grid.Row="2" Margin="10 10 10 0" Width="Auto" SelectedIndex="0" SelectionChanged="CaptureSource_SelectionChanged">
+                            <ComboBoxItem>No Rotate</ComboBoxItem>
+                            <ComboBoxItem>90° CCW</ComboBoxItem>
+                            <ComboBoxItem>90° CW</ComboBoxItem>
+                            <ComboBoxItem>180°</ComboBoxItem>
+                        </ComboBox>
+                        <CheckBox x:Name="EnableAudioCheckBox" Grid.Row="3" Margin="10 10 10 0" IsChecked="True" Checked="CaptureSource_Checked" Unchecked="CaptureSource_Checked">Enable Audio</CheckBox>
+                        <CheckBox x:Name="EnablePreviewCheckBox" Grid.Row="4" Margin="10 10 10 0" IsChecked="True" Checked="CaptureSource_Checked" Unchecked="CaptureSource_Checked">Enable Preview</CheckBox>
+                    </Grid>
+                    <Grid Grid.Column="1" >
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <ComboBox x:Name="CropComboBox" Grid.Row="0" Margin="10 10 10 0" Width="Auto" SelectedIndex="0" SelectionChanged="CaptureSource_SelectionChanged">
+                            <ComboBoxItem>Custom Size</ComboBoxItem>
+                            <ComboBoxItem>1X Crop</ComboBoxItem>
+                            <ComboBoxItem>2X Crop</ComboBoxItem>
+                            <ComboBoxItem>3X Crop</ComboBoxItem>
+                            <ComboBoxItem>4X Crop</ComboBoxItem>
+                            <ComboBoxItem>5X Crop</ComboBoxItem>
+                            <ComboBoxItem>Full 4:3 Crop</ComboBoxItem>
+                            <ComboBoxItem>Full 5:4 Crop</ComboBoxItem>
+                        </ComboBox>
+                        <Grid Grid.Row="1" >
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Margin="10 10 10 0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Column="0">Size</Label>
+                                <TextBox x:Name="CaptureWidth" Grid.Column="1" Margin="4,4,4,4" PreviewTextInput="PositiveIntValidation" TextChanged="CaptureSource_TextChanged">320</TextBox>
+                                <TextBox x:Name="CaptureHeight" Grid.Column="2" Margin="4,4,4,4" PreviewTextInput="PositiveIntValidation" TextChanged="CaptureSource_TextChanged">240</TextBox>
+                            </Grid>
+                            <Grid Grid.Row="1" Margin="10 0 10 0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Column="0">Offset</Label>
+                                <TextBox x:Name="CaptureXOffset" Grid.Column="1" Margin="4,4,4,4" PreviewTextInput="IntValidation" TextChanged="CaptureSource_TextChanged">0</TextBox>
+                                <TextBox x:Name="CaptureYOffset" Grid.Column="2" Margin="4,4,4,4" PreviewTextInput="IntValidation" TextChanged="CaptureSource_TextChanged">0</TextBox>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                    <Grid Grid.Column="2" Background="Gray">
+                        <Label x:Name="PreviewDisabledLabel" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Hidden">Preview Disabled</Label>
+                        <Image x:Name="PreviewImage" Margin="1,1,1,1"></Image>
+                    </Grid>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="Logs" Margin="0 0 0 10" Grid.Row="4">
+                <ScrollViewer x:Name="LogScrollView" Margin="0,0,10,0" ScrollChanged="LogScrollView_ScrollChanged" >
+                    <StackPanel x:Name="LogPanel">
+                    </StackPanel>
+                </ScrollViewer>
+            </GroupBox>
+        </Grid>
+    </Border>
+</Window>
+    

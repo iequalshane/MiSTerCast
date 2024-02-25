@@ -1,0 +1,9 @@
+; Add your modelines here
+; Original modelines were found here https://www.geocities.ws/podernixie/htpc/modes-en.html
+
+;Name                  Pclock HDis HStr HEnd HTot VDsp VStr VEnd VTot Int
+[256x240 NTSC (60Hz)]  4.905  256  264  287  312  240  241  244  262  0
+[320x240 NTSC (60Hz)]  6.700  320  336  367  426  240  244  247  262  0
+[320x480i NTSC (60Hz)] 6.700  320  336  367  426  480  488  493  525  1
+[640x480i NTSC (60Hz)] 12.336 640  662  720  784  480  488  494  525  1
+[720x480i NTSC (60Hz)] 13.846 720  744  809  880  480  488  494  525  1

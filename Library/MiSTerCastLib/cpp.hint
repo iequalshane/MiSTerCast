@@ -1,0 +1,2 @@
+#define MISTERCASTLIB_API __declspec(dllexport)
+#define MISTERCASTLIB_API __declspec(dllimport)
