@@ -43,6 +43,7 @@ void capture_audio()
         do
         {
             TickAudioCapture();
+            Sleep(1);
         } while (!stopStream);
         StopAudioCapture();
         capturing_audio = false;
