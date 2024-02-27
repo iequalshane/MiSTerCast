@@ -56,11 +56,15 @@ void cast_screen()
 {
     LogMessage("Casting to MiSTer starting.");
     casting_screen = true;
-    auto renderer = std::make_unique<renderer_nogpu>(targetIpString);
-    do
     {
-        renderer->draw(0);
-    } while (!stopStream);
+        auto renderer = std::make_unique<renderer_nogpu>(targetIpString);
+        {
+            do
+            {
+                renderer->draw(0);
+            } while (!stopStream);
+        }
+    }
     casting_screen = false;
     LogMessage("Casting to MiSTer stopped.");
 }
