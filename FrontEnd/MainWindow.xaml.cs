@@ -11,6 +11,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using System.Globalization;
+using System.Net;
 
 namespace MiSTerCast
 {
@@ -164,7 +165,7 @@ namespace MiSTerCast
                 if (isInitialized)
                 {
                     EnablePreviewCheckBox.IsChecked = false;
-                    if (MiSTerCastInterop.StartStream(TargetIpAddresTextBox.Text))
+                    if (MiSTerCastInterop.StartStream(Dns.GetHostEntry(TargetIpAddresTextBox.Text).AddressList[0].ToString()))
                     {
                         isStreaming = true;
                         ToggleStreamButton.Content = "Stop Stream";

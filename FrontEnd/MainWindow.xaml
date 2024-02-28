@@ -33,7 +33,7 @@
                     <Button x:Name="SaveSettingsButton" Grid.Column="1" Margin="10 10 10 10" Click="SaveSettingsButton_Click">Save Settings</Button>
                     <Button x:Name="LoadSettingsButton" Grid.Column="2" Margin="10 10 10 10" Click="LoadSettingsButton_Click">Load Settings</Button>
                     <Label Grid.Column="3" Margin="10 10 10 10">Target IP</Label>
-                    <TextBox x:Name="TargetIpAddresTextBox" Grid.Column="4" Margin="10 10 10 10" TextAlignment="Left">192.168.1.2</TextBox>
+                    <TextBox x:Name="TargetIpAddresTextBox" Grid.Column="4" Margin="10 10 10 10" TextAlignment="Left">MiSTer</TextBox>
                     <Button x:Name="HelpButton" Grid.Column="5"  Margin="10 10 10 10" Click="HelpButton_Click">
                         <Button.Resources>
                             <Style TargetType="Border">
