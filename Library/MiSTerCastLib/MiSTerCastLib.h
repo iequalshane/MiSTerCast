@@ -60,6 +60,7 @@ struct SourceOptions {
     INT16 xoffset;
     INT16 yoffset;
     UINT8 rotation;
+    bool useTransmitExtension;
 };
 
 typedef void(__stdcall *log_function)(const char* message, bool error);

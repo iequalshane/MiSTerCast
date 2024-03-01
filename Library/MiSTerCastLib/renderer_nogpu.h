@@ -212,6 +212,11 @@ private:
     bool nogpu_wait_ack(double timeout);
     bool nogpu_wait_status(nogpu_blit_status *status, double timeout);
     void nogpu_register_frametime(uint64_t frametime);
+
+    // Transmit packets extension
+    WSAOVERLAPPED overlapped;
+    LPFN_TRANSMITPACKETS        transmitPackets;
+    LPTRANSMIT_PACKETS_ELEMENT  transmitEl = new TRANSMIT_PACKETS_ELEMENT[256];
 };
 
 //============================================================
@@ -436,7 +441,7 @@ bool renderer_nogpu::nogpu_init()
     LogMessage("Done.");
             
     LogMessage("Initializing socket... ");
-    m_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    m_sockfd = WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, 0, WSA_FLAG_OVERLAPPED);
 
     if (m_sockfd < 0)
     {
@@ -466,7 +471,35 @@ bool renderer_nogpu::nogpu_init()
         return false;
     }
 
+    connect(m_sockfd, (sockaddr*)&m_server_addr, sizeof(m_server_addr));
+
+    // Query the function pointer for the TransmitPacket function
+    GUID transmitPacketsGuid = WSAID_TRANSMITPACKETS;
+    DWORD bytesReturned;
+    result = WSAIoctl(m_sockfd,
+        SIO_GET_EXTENSION_FUNCTION_POINTER,
+        &transmitPacketsGuid,
+        sizeof(GUID),
+        &transmitPackets,
+        sizeof(PVOID),
+        &bytesReturned,
+        NULL,
+        NULL);
+
+    if (result != 0) {
+        printf("Unable to load TransmitPackets extension: %d\n", WSAGetLastError());
+        return false;
+    }
+
+    for (int i = 0; i < 256; i++)
+    {
+        // Memory buffer and don't combine
+        transmitEl[i] = {};
+        transmitEl[i].dwElFlags = TP_ELEMENT_MEMORY | TP_ELEMENT_EOP;
+    }
+
     m_compression = 0x01; // lz4 compression
+
 
     switch (audioSampleRate)
     {
@@ -687,16 +720,56 @@ void renderer_nogpu::nogpu_send_mtu(char *buffer, int bytes_to_send, int chunk_m
     int chunk_size = 0;
     uint32_t offset = 0;
 
-    do
+    if (source_config.useTransmitExtension)
     {
-        chunk_size = bytes_to_send > chunk_max_size ? chunk_max_size : bytes_to_send;
-        bytes_to_send -= chunk_size;
-        bytes_this_chunk = chunk_size;
+        int packetCount = 0;
+        do
+        {
+            chunk_size = bytes_to_send > chunk_max_size ? chunk_max_size : bytes_to_send;
+            bytes_to_send -= chunk_size;
+            bytes_this_chunk = chunk_size;
+            transmitEl[packetCount].pBuffer = buffer + offset;
+            transmitEl[packetCount].cLength = chunk_size;
+            offset += chunk_size;
+            packetCount++;
+        } while (bytes_to_send > 0);
 
-        nogpu_send_command(buffer + offset, bytes_this_chunk);
-        offset += chunk_size;
+        SecureZeroMemory((PVOID)&overlapped, sizeof(WSAOVERLAPPED));
+        overlapped.hEvent = WSACreateEvent();
 
-    } while (bytes_to_send > 0);
+        DWORD rc = (transmitPackets)(m_sockfd,
+            transmitEl,
+            packetCount,
+            0xFFFFFFFF, // Use transmit elem size for sends
+            &overlapped,
+            TF_USE_SYSTEM_THREAD);
+
+        if (rc == FALSE) {
+            DWORD lastError;
+            lastError = WSAGetLastError();
+            if (lastError != ERROR_IO_PENDING)
+            {
+                LogMessage("Transmit packets failed: " + std::to_string(lastError));
+            }
+            else
+            {
+                rc = WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, INFINITE, TRUE);
+            }
+        }
+    }
+    else
+    {
+        do
+        {
+            chunk_size = bytes_to_send > chunk_max_size ? chunk_max_size : bytes_to_send;
+            bytes_to_send -= chunk_size;
+            bytes_this_chunk = chunk_size;
+
+            nogpu_send_command(buffer + offset, bytes_this_chunk);
+            offset += chunk_size;
+
+        } while (bytes_to_send > 0);
+    }
 }
 
 //============================================================
@@ -792,7 +865,6 @@ void renderer_nogpu::add_audio_to_recording(const uint16_t *buffer, int samples_
         nogpu_send_mtu((char*)buffer, command.sample_bytes, 1472);
     }
 }
-
 
 //============================================================
 //  renderer_nogpu::nogpu_send_command

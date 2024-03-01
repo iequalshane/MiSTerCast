@@ -15,6 +15,7 @@
 #include <windows.h>
 #include <winsock2.h>
 #include <Ws2tcpip.h>
+#include <mswsock.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <timeapi.h>

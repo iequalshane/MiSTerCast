@@ -82,6 +82,7 @@ MISTERCASTLIB_API bool Initialize(log_function fnLog, capture_image_function fnC
 
     source_config.syncrefresh = true;
     source_config.framedelay = 0;
+    source_config.useTransmitExtension = true;
 
     selected_modeline.pclock = 6.700;
     selected_modeline.hactive = 320;
