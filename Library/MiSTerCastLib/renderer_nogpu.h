@@ -388,25 +388,15 @@ int renderer_nogpu::draw(const int update)
         return 0;
     }
 
+    // Grab audio right before blit starts
+    TickAudioCapture();
+
     // Blit now
     nogpu_blit(m_frame, m_width, m_height);
 
-    // Send audio
-    unsigned int writePos = AudioWritePos;
-    unsigned sendPos = 0;
-    while (writePos != AudioReadPos)
-    {
-        int samplesToWrite = AudioReadPos < writePos ?
-            writePos - AudioReadPos :
-            AUDIO_BUFFER_SIZE - AudioReadPos;
-
-        memcpy(&audioSendBuffer[sendPos], &audioBuffer[AudioReadPos], samplesToWrite * sizeof(uint16_t));
-        sendPos += samplesToWrite;
-        AudioReadPos = (AudioReadPos + samplesToWrite) % AUDIO_BUFFER_SIZE;
-    }
-
-    if (sendPos > 0)
-        add_audio_to_recording(audioSendBuffer, sendPos);
+    // Send audio       
+    if (AudioWritePos > 0)
+        add_audio_to_recording(audioBuffer, AudioWritePos);
 
     time_blit = CurrentTicks();
 
@@ -813,7 +803,7 @@ bool renderer_nogpu::nogpu_send_command(void *command, int command_size)
 
     if (rc < 0)
     {
-        LogMessage("Send command failed.", true);
+        LogMessage("Send command failed: " + std::to_string(WSAGetLastError()), true);
         return false;
     }
 

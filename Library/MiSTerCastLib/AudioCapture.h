@@ -6,11 +6,9 @@
 
 // Buffers
 #define AUDIO_BUFFER_SIZE 10000000
-std::atomic_uint AudioWritePos = 0;
-std::atomic_uint AudioReadPos = 0;
+unsigned int AudioWritePos = 0;
 std::atomic_int audioSampleRate;
 uint16_t audioBuffer[AUDIO_BUFFER_SIZE] = {};
-uint16_t audioSendBuffer[AUDIO_BUFFER_SIZE] = {};
 
 // Audio Capture
 REFERENCE_TIME hnsRequestedDuration = REFTIMES_PER_SEC;
@@ -93,6 +91,7 @@ bool StopAudioCapture()
 
 bool TickAudioCapture()
 {
+    AudioWritePos = 0;
     UINT32 packetLength = 0;
     HRESULT hr = pCaptureClient->GetNextPacketSize(&packetLength);
     EXIT_ON_ERROR(hr, "IAudioCaptureClient GetNextPacketSize failed");
@@ -111,28 +110,26 @@ bool TickAudioCapture()
         bool silence = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
 
         float* pDataFloat = (float*)pData;
-        LONG lFloatsToWrite = numFramesAvailable * pwfx->nBlockAlign / sizeof(float);
-        LONG dataPos = 0;
-        LONG writePos = AudioWritePos;
+        unsigned int lFloatsToWrite = numFramesAvailable * pwfx->nBlockAlign / sizeof(float);
+        unsigned int dataPos = 0;
         while (dataPos < lFloatsToWrite)
         {
-            LONG writeLength = std::min(AUDIO_BUFFER_SIZE - writePos, lFloatsToWrite - dataPos);
+            LONG writeLength = std::min(AUDIO_BUFFER_SIZE - AudioWritePos, lFloatsToWrite - dataPos);
             if (silence)
             {
-                ZeroMemory(&audioBuffer[writePos], writeLength);
+                ZeroMemory(&audioBuffer[AudioWritePos], writeLength * sizeof(audioBuffer[0]));
             }
             else
             {
                 for (int i = 0; i < writeLength; i++)
                 {
-                    audioBuffer[writePos + i] = (uint16_t)(pDataFloat[dataPos + i] * 32767);
+                    audioBuffer[AudioWritePos + i] = (uint16_t)(pDataFloat[dataPos + i] * 32767);
                 }
             }
 
             dataPos += writeLength;
-            writePos = (writePos + writeLength) % AUDIO_BUFFER_SIZE;
+            AudioWritePos = (AudioWritePos + writeLength) % AUDIO_BUFFER_SIZE;
         }
-        AudioWritePos = writePos;
 
         hr = pCaptureClient->ReleaseBuffer(numFramesAvailable);
         EXIT_ON_ERROR(hr, "IAudioCaptureClient ReleaseBuffer failed");

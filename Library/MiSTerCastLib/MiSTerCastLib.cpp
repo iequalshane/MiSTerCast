@@ -32,28 +32,14 @@ void capture_screen()
     LogMessage("Screen capture stopped.");
 }
 
-std::atomic_bool capturing_audio = false;
-void capture_audio()
+std::atomic_bool casting_screen = false;
+void cast_screen()
 {
     if (source_config.audio)
     {
         LogMessage("Audio capture starting.");
         StartAudioCapture();
-        capturing_audio = true;
-        do
-        {
-            TickAudioCapture();
-            Sleep(1);
-        } while (!stopStream);
-        StopAudioCapture();
-        capturing_audio = false;
-        LogMessage("Audio capture stopped.");
     }
-}
-
-std::atomic_bool casting_screen = false;
-void cast_screen()
-{
     LogMessage("Casting to MiSTer starting.");
     casting_screen = true;
     {
@@ -67,11 +53,15 @@ void cast_screen()
     }
     casting_screen = false;
     LogMessage("Casting to MiSTer stopped.");
+    if (source_config.audio)
+    {
+        StopAudioCapture();
+        LogMessage("Audio capture stopped.");
+    }
 }
 
 bool initialized = false;
 std::unique_ptr<std::thread> captureScreenTask;
-std::unique_ptr<std::thread> captureAudioTask;
 MISTERCASTLIB_API bool Initialize(log_function fnLog, capture_image_function fnCapture)
 {
     if (initialized)
@@ -138,7 +128,6 @@ std::unique_ptr<std::thread> castScreenTask;
 MISTERCASTLIB_API bool StartStream(const char* targetIp)
 {
     LogMessage("Starting stream.");
-    captureAudioTask = std::make_unique<std::thread>(capture_audio);
     targetIpString = std::string(targetIp);
     castScreenTask = std::make_unique<std::thread>(cast_screen);
 
@@ -148,10 +137,9 @@ MISTERCASTLIB_API bool StartStream(const char* targetIp)
 MISTERCASTLIB_API bool StopStream()
 {
     stopStream = true;
-    do {} while (capturing_audio || casting_screen); // wait for threads
+    do {} while (casting_screen); // wait for threads
     stopStream = false;
 
-    captureAudioTask->detach();
     castScreenTask->detach();
     return true;
 }
