@@ -165,7 +165,21 @@ namespace MiSTerCast
                 if (isInitialized)
                 {
                     EnablePreviewCheckBox.IsChecked = false;
-                    if (MiSTerCastInterop.StartStream(Dns.GetHostEntry(TargetIpAddresTextBox.Text).AddressList[0].ToString()))
+                    IPAddress ipAddress = null;
+                    if (!IPAddress.TryParse(TargetIpAddresTextBox.Text, out ipAddress))
+                    {
+                        try
+                        {
+                            ipAddress = Dns.GetHostEntry(TargetIpAddresTextBox.Text).AddressList[0];
+                        }
+                        catch (Exception exception)
+                        {
+                            Log("Resolving target IP address failed: " + exception.Message, true);
+                            return;
+                        }
+                    }
+
+                    if (MiSTerCastInterop.StartStream(ipAddress.ToString()))
                     {
                         isStreaming = true;
                         ToggleStreamButton.Content = "Stop Stream";
