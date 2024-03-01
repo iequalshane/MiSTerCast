@@ -35,11 +35,17 @@ void capture_screen()
 std::atomic_bool casting_screen = false;
 void cast_screen()
 {
+    if (!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST))
+    {
+        LogMessage("Setting cast screen thread priority failed: " + std::to_string(GetLastError()), true);
+    }
+
     if (source_config.audio)
     {
         LogMessage("Audio capture starting.");
         StartAudioCapture();
     }
+
     LogMessage("Casting to MiSTer starting.");
     casting_screen = true;
     {
@@ -53,6 +59,7 @@ void cast_screen()
     }
     casting_screen = false;
     LogMessage("Casting to MiSTer stopped.");
+
     if (source_config.audio)
     {
         StopAudioCapture();

@@ -388,15 +388,16 @@ int renderer_nogpu::draw(const int update)
         return 0;
     }
 
-    // Grab audio right before blit starts
-    TickAudioCapture();
-
     // Blit now
     nogpu_blit(m_frame, m_width, m_height);
 
-    // Send audio       
-    if (AudioWritePos > 0)
-        add_audio_to_recording(audioBuffer, AudioWritePos);
+    // Capture and send audio
+    if (source_config.audio)
+    {
+        TickAudioCapture();
+        if (AudioWritePos > 0)
+            add_audio_to_recording(audioBuffer, AudioWritePos);
+    }
 
     time_blit = CurrentTicks();
 
