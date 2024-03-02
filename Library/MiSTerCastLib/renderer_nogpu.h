@@ -117,15 +117,22 @@ typedef struct cmd_audio
 {
     const uint8_t cmd = CMD_AUDIO;
     uint16_t sample_bytes;
-} cmd_blit;
+} cmd_audio;
 
 typedef struct cmd_blit_vsync
 {
     const uint8_t cmd = CMD_BLIT_VSYNC;
     uint32_t frame;
     uint16_t vsync;
-    uint16_t block_size;
 } cmd_blit_vsync;
+
+typedef struct cmd_blit_compressed_vsync
+{
+    const uint8_t cmd = CMD_BLIT_VSYNC;
+    uint32_t frame;
+    uint16_t vsync;
+    uint32_t data_size;
+} cmd_blit_compressed_vsync;
 
 
 typedef struct cmd_get_status
@@ -207,7 +214,7 @@ private:
     bool nogpu_switch_video_mode();
     void nogpu_blit(uint32_t frame, uint16_t vsync, uint16_t line_width);
     void nogpu_send_mtu(char *buffer, int bytes_to_send, int chunk_max_size);
-    void nogpu_send_lz4(char *buffer, int bytes_to_send, int block_size);
+    void nogpu_send_lz4(char *buffer, int bytes_to_send, int data_size);
     int nogpu_compress(int id_compress, char *buffer_comp, const char *buffer_rgb, uint32_t buffer_size);
     bool nogpu_wait_ack(double timeout);
     bool nogpu_wait_status(nogpu_blit_status *status, double timeout);
@@ -303,8 +310,8 @@ int renderer_nogpu::draw(const int update)
     
     float stepx;
     float stepy;
-    float interlaceStepX = 0;
-    float interlaceStepY = 0;
+    int interlaceStepX = 0;
+    int interlaceStepY = 0;
     switch (source_config.rotation)
     {
     case Rotation::CW90:
@@ -703,7 +710,7 @@ void renderer_nogpu::nogpu_send_mtu(char *buffer, int bytes_to_send, int chunk_m
 //  renderer_nogpu::nogpu_send_lz4
 //============================================================
 
-void renderer_nogpu::nogpu_send_lz4(char *buffer, int bytes_to_send, int block_size)
+void renderer_nogpu::nogpu_send_lz4(char *buffer, int bytes_to_send, int data_size)
 {
     LZ4_stream_t lz4_stream_body;
     LZ4_stream_t* lz4_stream = &lz4_stream_body;
@@ -716,7 +723,7 @@ void renderer_nogpu::nogpu_send_lz4(char *buffer, int bytes_to_send, int block_s
 
     do
     {
-        chunk_size = bytes_to_send > block_size ? block_size : bytes_to_send;
+        chunk_size = bytes_to_send > data_size ? data_size : bytes_to_send;
         bytes_to_send -= chunk_size;
         bytes_this_chunk = chunk_size;
 
@@ -740,9 +747,6 @@ void renderer_nogpu::nogpu_send_lz4(char *buffer, int bytes_to_send, int block_s
 
 void renderer_nogpu::nogpu_blit(uint32_t frame, uint16_t width, uint16_t height)
 {
-    // Compressed blocks are 16 lines long
-    int block_size = m_compression ? (width << 4) * 3 : 0;
-
     int vsync_offset = 0;
 
     // Calculate frame delay factor
@@ -763,18 +767,31 @@ void renderer_nogpu::nogpu_blit(uint32_t frame, uint16_t width, uint16_t height)
     // Update vsync scanline
     m_vsync_scanline = std::min<int>(int((m_current_mode.vtotal) * m_frame_delay + vsync_offset + 1), m_current_mode.vtotal);
 
+    int fb_size = width * height * 3;
+
     // Send CMD_BLIT
-    cmd_blit_vsync command;
-    command.frame = frame;
-    command.vsync = source_config.syncrefresh ? m_vsync_scanline : 0;
-    command.block_size = block_size;
-    nogpu_send_command(&command, sizeof(command));
-
     if (m_compression == 0)
-        nogpu_send_mtu(&m_fb[0], width * height * 3, 1470);
-
+    {
+        cmd_blit_vsync command;
+        command.frame = frame;
+        command.vsync = source_config.syncrefresh ? m_vsync_scanline : 0;
+        nogpu_send_command(&command, sizeof(command));
+        nogpu_send_mtu(&m_fb[0], fb_size, 1472);
+    }
     else
-        nogpu_send_lz4(&m_fb[0], width * height * 3, block_size);
+    {
+        cmd_blit_compressed_vsync command;
+        command.frame = frame;
+        command.vsync = source_config.syncrefresh ? m_vsync_scanline : 0;
+        if (m_compression == 1)
+            command.data_size = LZ4_compress_default(&m_fb[0], &m_fb_compressed[0], fb_size, ARRAYSIZE(m_fb_compressed));
+        else
+            command.data_size = LZ4_compress_HC(&m_fb[0], &m_fb_compressed[0], fb_size, ARRAYSIZE(m_fb_compressed), LZ4HC_CLEVEL_DEFAULT);
+
+        nogpu_send_command(&command, sizeof(command));
+        nogpu_send_mtu(&m_fb_compressed[0], command.data_size, 1472);
+    }
+    
 }
 
 //============================================================
