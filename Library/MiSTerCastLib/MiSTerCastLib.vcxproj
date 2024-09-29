@@ -168,14 +168,17 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="groovymister.h" />
     <ClInclude Include="MiSTerCastLib.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="AudioCapture.h" />
     <ClInclude Include="renderer_nogpu.h" />
+    <ClInclude Include="rio.h" />
     <ClInclude Include="VideoCapture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="groovymister.cpp" />
     <ClCompile Include="MiSTerCastLib.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

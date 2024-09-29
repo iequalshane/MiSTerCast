@@ -17,6 +17,7 @@ std::atomic_bool stopCapture = false;
 std::atomic_bool stopStream = false;
 std::string targetIpString;
 
+#include "groovymister.h"
 #include "renderer_nogpu.h"
 
 std::atomic_bool capturing_screen = false;
@@ -53,7 +54,7 @@ void cast_screen()
         {
             do
             {
-                renderer->draw(0);
+                renderer->draw();
             } while (!stopStream);
         }
     }

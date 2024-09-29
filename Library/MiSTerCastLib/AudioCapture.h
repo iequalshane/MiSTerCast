@@ -8,7 +8,7 @@
 #define AUDIO_BUFFER_SIZE 10000000
 unsigned int AudioWritePos = 0;
 std::atomic_int audioSampleRate;
-uint16_t audioBuffer[AUDIO_BUFFER_SIZE] = {};
+uint16_t* audioBuffer = nullptr;
 
 // Audio Capture
 REFERENCE_TIME hnsRequestedDuration = REFTIMES_PER_SEC;
@@ -106,6 +106,9 @@ bool TickAudioCapture()
             &numFramesAvailable,
             &flags, NULL, NULL);
         EXIT_ON_ERROR(hr, "IAudioCaptureClient GetBuffer failed");
+
+        if (!audioBuffer)
+            return true;
 
         bool silence = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
 

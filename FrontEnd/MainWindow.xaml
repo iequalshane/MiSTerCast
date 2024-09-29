@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MiSTerCast"
         mc:Ignorable="d"
-        Title="MiSTerCast 1.01" Height="600" Width="580"
+        Title="MiSTerCast 1.02" Height="600" Width="580"
         Activated="Window_Activated"
         Closing="MainWindow_Closing"
         Closed="Window_Closed">
